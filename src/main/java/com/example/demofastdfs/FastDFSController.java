@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,16 +40,22 @@ public class FastDFSController {
     @PostMapping("img")
     public void uploadImage(@RequestParam("file") MultipartFile file){
         Set<MetaData> metaDataSet = new HashSet<>();
-        metaDataSet.add(new MetaData("Author", "Author"));
-        metaDataSet.add(new MetaData("CreateDate", "当前时间"));
+        metaDataSet.add(new MetaData("Author", "安吉小小"));
+        metaDataSet.add(new MetaData("CreateDate", new Date().toString()));
         try {
             StorePath storePath = fastFileStorageClient.uploadImageAndCrtThumbImage(file.getInputStream(), file.getSize(), FilenameUtils.getExtension(file.getOriginalFilename()), metaDataSet);
+            System.out.println("上传结果---" + storePath);
             //拿到元数据
             Set<MetaData> metadata = fastFileStorageClient.getMetadata(storePath.getGroup(), storePath.getPath());
+            System.out.println("元数据---" + metadata);
             // 带分组的路径
             String fullPath = storePath.getFullPath();
+            System.out.println("带分组的路径---" + fullPath);
+            String path = storePath.getPath();
+            System.out.println("路径---" + path);
             // 获取缩略图路径
-            String path = thumbImageConfig.getThumbImagePath(storePath.getPath());
+            String thumbImagePath = thumbImageConfig.getThumbImagePath(storePath.getPath());
+            System.out.println("缩略图路径---" + thumbImagePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
