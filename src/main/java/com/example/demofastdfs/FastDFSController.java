@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -67,22 +68,40 @@ public class FastDFSController {
      * @param file
      */
     @PostMapping("imgCustom")
-    public void uploadimgCustom(@RequestParam("file") MultipartFile file){
+    public void uploadimgCustom(@RequestParam("file") MultipartFile file) throws Exception {
+
+        FastImageFile fastImageFile = crtFastImageFileOnly(file);
+
+        StorePath storePath = fastFileStorageClient.uploadImage(fastImageFile);
+        System.out.println("上传结果---" + storePath);
+        //拿到元数据
+        Set<MetaData> metadata = fastFileStorageClient.getMetadata(storePath.getGroup(), storePath.getPath());
+        System.out.println("元数据---" + metadata);
+
+        // 带分组的路径
+        String fullPath = storePath.getFullPath();
+        System.out.println("带分组的路径---" + fullPath);
+        // 获取缩略图路径
+        //String path = thumbImageConfig.getThumbImagePath(storePath.getPath());
+
+    }
+
+    /**
+     * 只上传文件
+     *
+     * @return
+     * @throws Exception
+     */
+    private FastImageFile crtFastImageFileOnly(MultipartFile file) throws Exception {
+        InputStream in = file.getInputStream();
         Set<MetaData> metaDataSet = new HashSet<>();
         metaDataSet.add(new MetaData("Author", "Author"));
         metaDataSet.add(new MetaData("CreateDate", "当前时间"));
-
-        FastImageFile build = new FastImageFile.Builder()
-//                .withThumbImage(200, 200)
-//                .withFile(in, file.length(), fileExtName)
-//                .withMetaData(metaDataSet)
+        String name = file.getOriginalFilename();
+        String fileExtName = FilenameUtils.getExtension(name);
+        return new FastImageFile.Builder()
+                .withFile(in, file.getSize(), fileExtName)
+                .withMetaData(metaDataSet)
                 .build();
-        StorePath storePath = fastFileStorageClient.uploadImage(build);
-        //拿到元数据
-        Set<MetaData> metadata = fastFileStorageClient.getMetadata(storePath.getGroup(), storePath.getPath());
-        // 带分组的路径
-        String fullPath = storePath.getFullPath();
-        // 获取缩略图路径
-        String path = thumbImageConfig.getThumbImagePath(storePath.getPath());
     }
 }
